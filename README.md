@@ -40,7 +40,7 @@
 |---------|----------|--------|
 | **Polygon** | 137 | ✅ Production |
 | **Ethereum** | 1 | ✅ Production |
-| **Polygon Mumbai** | 80001 | ✅ Testnet |
+| **Polygon Amoy** | 80002 | ✅ Testnet |
 
 ---
 
