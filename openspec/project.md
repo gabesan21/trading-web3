@@ -10,6 +10,11 @@ This project aims to develop various trading strategies for Web3 decentralized e
 
 ## Project Conventions
 
+### Code Completion Policy
+- **ALWAYS write production-ready code.** No placeholders, no TODO comments, no incomplete implementations.
+- **When a task is requested, it MUST be completed fully.** All updates and new logic must be implemented.
+- **Breaking changes are intentional.** Do not preserve backward compatibility if a change is requested.
+
 ### Package Management
 - Use pnpm as the package manager (not npm or yarn).
 - Always use `pnpm install` to install dependencies.

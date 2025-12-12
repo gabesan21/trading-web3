@@ -46,7 +46,7 @@
 | DEX | Type | MEV Protection | Gas Cost | Status |
 |-----|------|----------------|----------|--------|
 | **Uniswap V3** | On-chain AMM | ❌ No | ~150k gas | ✅ Active |
-| **Uniswap V4** | Hooks-based AMM | TBD | TBD | 🔜 Planned |
+| **Uniswap V4** | Hooks-based AMM | ❌ No | ~100k gas (optimized) | ✅ Active |
 | **1Inch** | Meta-aggregator | ⚠️ Partial | ~200k gas | ✅ Active |
 | **CowSwap** | Intent-based | ✅ Yes | ~0 (solver pays) | ✅ Active |
 
@@ -113,11 +113,29 @@ PRIVATE_KEY=your_private_key_without_0x_prefix
 # API Keys (recommended)
 ONEINCH_API_KEY=your_1inch_api_key
 
+# Uniswap V4 Configuration (optional - overrides config/dex.json)
+# Leave empty if not yet deployed on your target network
+UNISWAP_V4_QUOTER_ADDRESS=
+UNISWAP_V4_POOL_MANAGER_ADDRESS=
+UNISWAP_V4_UNIVERSAL_ROUTER_ADDRESS=
+
 # Trading Parameters
 MIN_PROFIT_BPS=30        # 0.3% minimum profit
 MAX_SLIPPAGE_BPS=50      # 0.5% max slippage
 CHECK_GAS_COST=true      # Factor gas into profitability
 ```
+
+### DEX Configuration
+
+ARB VORTEX uses a centralized configuration system for DEX addresses and parameters.
+Base configuration is in `config/dex.json` with network-specific settings for Ethereum, Polygon, and testnets.
+Environment variables in `.env` can override these settings.
+
+**Uniswap V4 Status:**
+- Uniswap V4 is integrated into the system and will be used automatically when configured
+- Currently, V4 is not yet deployed on all networks
+- When V4 addresses are available for your network, set them in `.env` to enable V4 quotes
+- The system will gracefully continue with V3, 1Inch, and CowSwap if V4 is not configured
 
 ### Getting Started
 
@@ -157,10 +175,17 @@ CHECK_GAS_COST=true      # Factor gas into profitability
 
 ## How It Works
 
-1. **Scans** all stablecoin pairs across Uniswap V3, 1Inch, and CowSwap
+1. **Scans** all stablecoin pairs across Uniswap V3, Uniswap V4 (if configured), 1Inch, and CowSwap
 2. **Calculates** profitability including gas costs
 3. **Executes** trades automatically when profitable opportunities are found
 4. **Logs** all activity for monitoring and analysis
+
+### Multi-Tier Quote Optimization
+
+- **Uniswap V3/V4**: Queries multiple fee tiers (0.05%, 0.3%, 1%) to find the best rate
+- **1Inch**: Aggregates across multiple DEXs for best routing
+- **CowSwap**: MEV-protected intents executed by solvers
+- All quotes are compared to ensure you get the best possible price
 
 ---
 

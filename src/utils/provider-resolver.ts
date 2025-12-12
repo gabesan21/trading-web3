@@ -58,19 +58,23 @@ export function getExecutorForProvider(
   switch (normalizedInput) {
     case normalizeProviderName('Uniswap V3'):
     case normalizeProviderName('UniswapV3'):
-      return new UniswapV3Executor(config.uniswap.v3QuoterAddress);
+      return new UniswapV3Executor(
+        config.dex.uniswapV3.routerAddress,
+        config.dex.uniswapV3.feeTiers,
+        config.dex.uniswapV3.defaultFeeTier
+      );
       
     case normalizeProviderName('1Inch'):
     case normalizeProviderName('OneInch'):
       return new OneInchExecutor(
-        config.oneinch.apiBaseUrl,
+        config.dex.oneinch.apiBaseUrl,
         config.oneinch.apiKey
       );
       
     case normalizeProviderName('CowSwap'):
     case normalizeProviderName('Cow Swap'):
       return new CowSwapExecutor(
-        config.cowswap.apiBaseUrl
+        config.dex.cowswap.apiBaseUrl
       );
       
     default:
@@ -117,21 +121,28 @@ export function getQuoteProviderForProvider(
     case normalizeProviderName('UniswapV3'):
       return new UniswapV3QuoteProvider(
         config.rpcUrl,
-        config.uniswap.v3QuoterAddress
+        config.dex.uniswapV3.quoterAddress,
+        config.dex.uniswapV3.feeTiers,
+        config.dex.uniswapV3.defaultFeeTier,
+        config.maxRetries
       );
       
     case normalizeProviderName('1Inch'):
     case normalizeProviderName('OneInch'):
       return new OneInchQuoteProvider(
-        config.oneinch.apiBaseUrl,
-        config.oneinch.apiKey
+        config.dex.oneinch.apiBaseUrl,
+        config.oneinch.apiKey,
+        config.dex.oneinch.timeout,
+        config.maxRetries
       );
       
     case normalizeProviderName('CowSwap'):
     case normalizeProviderName('Cow Swap'):
       return new CowSwapQuoteProvider(
-        config.cowswap.apiBaseUrl,
-        config.cowswap.appData
+        config.dex.cowswap.apiBaseUrl,
+        config.cowswap.appData,
+        config.dex.cowswap.timeout,
+        config.maxRetries
       );
       
     default:

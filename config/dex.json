@@ -1,0 +1,103 @@
+{
+  "networks": {
+    "1": {
+      "name": "Ethereum Mainnet",
+      "uniswapV3": {
+        "quoterAddress": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
+        "routerAddress": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000
+      },
+      "uniswapV4": {
+        "quoterAddress": "",
+        "poolManagerAddress": "",
+        "universalRouterAddress": "",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000,
+        "defaultHooks": "0x0000000000000000000000000000000000000000"
+      },
+      "oneinch": {
+        "apiBaseUrl": "https://api.1inch.dev/swap/v5.2/1",
+        "timeout": 30000
+      },
+      "cowswap": {
+        "apiBaseUrl": "https://api.cow.fi/mainnet",
+        "timeout": 30000
+      }
+    },
+    "137": {
+      "name": "Polygon",
+      "uniswapV3": {
+        "quoterAddress": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
+        "routerAddress": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000
+      },
+      "uniswapV4": {
+        "quoterAddress": "",
+        "poolManagerAddress": "",
+        "universalRouterAddress": "",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000,
+        "defaultHooks": "0x0000000000000000000000000000000000000000"
+      },
+      "oneinch": {
+        "apiBaseUrl": "https://api.1inch.dev/swap/v5.2/137",
+        "timeout": 30000
+      },
+      "cowswap": {
+        "apiBaseUrl": "https://api.cow.fi/mainnet",
+        "timeout": 30000
+      }
+    },
+    "80002": {
+      "name": "Polygon Amoy Testnet",
+      "uniswapV3": {
+        "quoterAddress": "0xC5290058841028F1614F3A6F0F5816cAd0df5E27",
+        "routerAddress": "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000
+      },
+      "uniswapV4": {
+        "quoterAddress": "",
+        "poolManagerAddress": "",
+        "universalRouterAddress": "",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000,
+        "defaultHooks": "0x0000000000000000000000000000000000000000"
+      },
+      "oneinch": {
+        "apiBaseUrl": "https://api.1inch.dev/swap/v5.2/80002",
+        "timeout": 30000
+      },
+      "cowswap": {
+        "apiBaseUrl": "https://api.cow.fi/goerli",
+        "timeout": 30000
+      }
+    }
+  }
+}

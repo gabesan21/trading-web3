@@ -2,7 +2,8 @@ import { Contract, Wallet } from 'ethers';
 import { SwapExecutor, SwapParams, SwapResult } from '../../../types/executor';
 import { Token } from '../../../types/quote';
 import { Logger } from '../../../utils/logger';
-import { ERC20_ABI, UNISWAP_V3_ROUTER_ABI, UNISWAP_V3_ROUTER_ADDRESS, UNISWAP_V3_FEES } from '../../../utils/abis';
+import { ERC20_ABI, UNISWAP_V3_ROUTER_ABI } from '../../../utils/abis';
+import { FeeTier } from '../../../config/dex';
 
 /**
  * Uniswap V3 Swap Executor
@@ -10,9 +11,17 @@ import { ERC20_ABI, UNISWAP_V3_ROUTER_ABI, UNISWAP_V3_ROUTER_ADDRESS, UNISWAP_V3
 export class UniswapV3Executor implements SwapExecutor {
   public readonly name = 'Uniswap V3';
   private readonly routerAddress: string;
+  private readonly feeTiers: FeeTier[];
+  private readonly defaultFeeTier: number;
 
-  constructor(routerAddress?: string) {
-    this.routerAddress = routerAddress || UNISWAP_V3_ROUTER_ADDRESS;
+  constructor(
+    routerAddress: string,
+    feeTiers: FeeTier[],
+    defaultFeeTier: number = 3000
+  ) {
+    this.routerAddress = routerAddress;
+    this.feeTiers = feeTiers;
+    this.defaultFeeTier = defaultFeeTier;
   }
 
   /**
@@ -65,7 +74,7 @@ export class UniswapV3Executor implements SwapExecutor {
       const swapParams = {
         tokenIn: params.tokenIn.address,
         tokenOut: params.tokenOut.address,
-        fee: UNISWAP_V3_FEES.MEDIUM, // Use 0.3% fee tier
+        fee: this.defaultFeeTier,
         recipient: params.signer.address,
         amountIn: params.amountIn,
         amountOutMinimum: params.minAmountOut,
@@ -110,7 +119,7 @@ export class UniswapV3Executor implements SwapExecutor {
       const swapParams = {
         tokenIn: params.tokenIn.address,
         tokenOut: params.tokenOut.address,
-        fee: UNISWAP_V3_FEES.MEDIUM,
+        fee: this.defaultFeeTier,
         recipient: params.signer.address,
         amountIn: params.amountIn,
         amountOutMinimum: params.minAmountOut,

@@ -1,9 +1,11 @@
 import { getConfig } from '../config/env';
 import { Token } from '../types/quote';
 import { UniswapV3QuoteProvider } from '../dex/uniswap/v3/quote';
+import { UniswapV4QuoteProvider } from '../dex/uniswap/v4/quote';
 import { OneInchQuoteProvider } from '../dex/oneinch/quote';
 import { CowSwapQuoteProvider } from '../dex/cowswap/quote';
 import { QuoteService } from '../services/quote/QuoteService';
+import { Logger } from '../utils/logger';
 import { ethers } from 'ethers';
 
 /**
@@ -53,25 +55,49 @@ async function main() {
 
   // Initialize providers
   console.log('Initializing providers...');
-  const providers = [
+  const providers: Array<
+    UniswapV3QuoteProvider | UniswapV4QuoteProvider | OneInchQuoteProvider | CowSwapQuoteProvider
+  > = [
     new UniswapV3QuoteProvider(
       config.rpcUrl,
-      config.uniswap.v3QuoterAddress,
+      config.dex.uniswapV3.quoterAddress,
+      config.dex.uniswapV3.feeTiers,
+      config.dex.uniswapV3.defaultFeeTier,
       config.maxRetries
     ),
     new OneInchQuoteProvider(
-      config.oneinch.apiBaseUrl,
+      config.dex.oneinch.apiBaseUrl,
       config.oneinch.apiKey,
-      config.requestTimeout,
+      config.dex.oneinch.timeout,
       config.maxRetries
     ),
     new CowSwapQuoteProvider(
-      config.cowswap.apiBaseUrl,
+      config.dex.cowswap.apiBaseUrl,
       config.cowswap.appData,
-      config.requestTimeout,
+      config.dex.cowswap.timeout,
       config.maxRetries
     ),
   ];
+
+  // Conditionally add Uniswap V4 provider if configured
+  if (config.uniswap.v4QuoterAddress && config.dex.uniswapV4) {
+    try {
+      const v4Provider = new UniswapV4QuoteProvider(
+        config.rpcUrl,
+        config.dex.uniswapV4,
+        config.chainId,
+        config.maxRetries
+      );
+      providers.push(v4Provider);
+      Logger.info('✓ Uniswap V4 provider enabled');
+    } catch (error) {
+      Logger.warn('⚠️  Uniswap V4 provider initialization failed, skipping', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  } else {
+    Logger.warn('⚠️  Uniswap V4 not configured - set V4 addresses to enable');
+  }
 
   console.log(`✓ Initialized ${providers.length} providers`);
   console.log();

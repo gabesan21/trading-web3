@@ -4,9 +4,11 @@ import { loadStablecoins } from '../config/stablecoins';
 import { QuoteService } from '../services/quote/QuoteService';
 import { BalanceService } from '../services/wallet/BalanceService';
 import { UniswapV3QuoteProvider } from '../dex/uniswap/v3/quote';
+import { UniswapV4QuoteProvider } from '../dex/uniswap/v4/quote';
 import { OneInchQuoteProvider } from '../dex/oneinch/quote';
 import { CowSwapQuoteProvider } from '../dex/cowswap/quote';
 import { UniswapV3Executor } from '../dex/uniswap/v3/executor';
+import { UniswapV4Executor } from '../dex/uniswap/v4/executor';
 import { OneInchExecutor } from '../dex/oneinch/executor';
 import { CowSwapExecutor } from '../dex/cowswap/executor';
 import { StablecoinArbitrage } from '../strategies/arbitrage/StablecoinArbitrage';
@@ -163,28 +165,76 @@ async function main() {
     // Initialize quote providers
     const uniswapV3Quoter = new UniswapV3QuoteProvider(
       config.rpcUrl,
-      config.uniswap.v3QuoterAddress
+      config.dex.uniswapV3.quoterAddress,
+      config.dex.uniswapV3.feeTiers,
+      config.dex.uniswapV3.defaultFeeTier,
+      config.maxRetries
     );
     const oneinchQuoter = new OneInchQuoteProvider(
-      config.oneinch.apiBaseUrl,
-      config.oneinch.apiKey
+      config.dex.oneinch.apiBaseUrl,
+      config.oneinch.apiKey,
+      config.dex.oneinch.timeout,
+      config.maxRetries
     );
     const cowswapQuoter = new CowSwapQuoteProvider(
-      config.cowswap.apiBaseUrl,
-      config.cowswap.appData
+      config.dex.cowswap.apiBaseUrl,
+      config.cowswap.appData,
+      config.dex.cowswap.timeout,
+      config.maxRetries
     );
 
-    const quoteProviders = [uniswapV3Quoter, oneinchQuoter, cowswapQuoter];
+    const quoteProviders: Array<
+      UniswapV3QuoteProvider | UniswapV4QuoteProvider | OneInchQuoteProvider | CowSwapQuoteProvider
+    > = [uniswapV3Quoter, oneinchQuoter, cowswapQuoter];
+
+    // Conditionally add Uniswap V4 provider if configured
+    if (config.uniswap.v4QuoterAddress && config.dex.uniswapV4) {
+      try {
+        const uniswapV4Quoter = new UniswapV4QuoteProvider(
+          config.rpcUrl,
+          config.dex.uniswapV4,
+          config.chainId,
+          config.maxRetries
+        );
+        quoteProviders.push(uniswapV4Quoter);
+        Logger.info('✓ Uniswap V4 quote provider enabled');
+      } catch (error) {
+        Logger.warn('⚠️  Uniswap V4 quote provider initialization failed, skipping', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
     const quoteService = new QuoteService(quoteProviders);
 
     // Initialize swap executors
     const executors = new Map<string, SwapExecutor>();
-    executors.set('Uniswap V3', new UniswapV3Executor());
+    executors.set(
+      'Uniswap V3',
+      new UniswapV3Executor(
+        config.dex.uniswapV3.routerAddress,
+        config.dex.uniswapV3.feeTiers,
+        config.dex.uniswapV3.defaultFeeTier
+      )
+    );
     executors.set(
       '1Inch',
-      new OneInchExecutor(config.oneinch.apiBaseUrl, config.oneinch.apiKey)
+      new OneInchExecutor(config.dex.oneinch.apiBaseUrl, config.oneinch.apiKey)
     );
-    executors.set('CowSwap', new CowSwapExecutor(config.cowswap.apiBaseUrl));
+    executors.set('CowSwap', new CowSwapExecutor(config.dex.cowswap.apiBaseUrl));
+
+    // Conditionally add Uniswap V4 executor if configured
+    if (config.uniswap.v4QuoterAddress && config.dex.uniswapV4) {
+      try {
+        const uniswapV4Executor = new UniswapV4Executor(config.dex.uniswapV4);
+        executors.set('Uniswap V4', uniswapV4Executor);
+        Logger.info('✓ Uniswap V4 executor enabled');
+      } catch (error) {
+        Logger.warn('⚠️  Uniswap V4 executor initialization failed, skipping', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
 
     // Initialize balance service
     const balanceService = new BalanceService(provider);

@@ -28,6 +28,7 @@
     "@cowprotocol/cow-sdk": "^7.2.5",
     "@uniswap/sdk-core": "^4.2.1",
     "@uniswap/v3-sdk": "^3.26.0",
+    "@uniswap/v4-sdk": "^1.23.0",
     "axios": "^1.13.2",
     "dotenv": "^16.6.1"
   }

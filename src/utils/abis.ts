@@ -26,17 +26,3 @@ export const UNISWAP_V3_ROUTER_ABI = [
   )) payable returns (uint256 amountOut)`,
   'function WETH9() view returns (address)',
 ];
-
-/**
- * Uniswap V3 SwapRouter02 address on Polygon
- */
-export const UNISWAP_V3_ROUTER_ADDRESS = '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45';
-
-/**
- * Common fee tiers for Uniswap V3 pools
- */
-export const UNISWAP_V3_FEES = {
-  LOW: 500, // 0.05%
-  MEDIUM: 3000, // 0.3%
-  HIGH: 10000, // 1%
-} as const;

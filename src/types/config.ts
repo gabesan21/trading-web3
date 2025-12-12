@@ -1,3 +1,5 @@
+import { NetworkDexConfig } from '../config/dex';
+
 /**
  * Application configuration interface.
  * All configuration is loaded from environment variables.
@@ -8,6 +10,9 @@ export interface AppConfig {
   
   /** Ethereum chain ID (1 = Mainnet) */
   chainId: number;
+  
+  /** DEX configuration (centralized config for all DEX integrations) */
+  dex: NetworkDexConfig;
   
   /** Uniswap-specific configuration */
   uniswap: {

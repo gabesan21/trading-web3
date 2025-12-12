@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import { AppConfig } from '../types/config';
+import { getDexConfig, NetworkDexConfig } from './dex';
 
 dotenv.config();
 
@@ -27,14 +28,50 @@ export function loadConfig(): AppConfig {
     throw new Error(`CHAIN_ID must be a number. Got: ${chainIdStr}`);
   }
 
-  // Uniswap V3 Quoter Contract Address
-  // Default is Ethereum Mainnet address
-  const uniswapV3QuoterAddress = 
-    process.env.UNISWAP_V3_QUOTER_ADDRESS || 
-    '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6';
+  // Load DEX configuration (V4 is optional)
+  let dexConfig: NetworkDexConfig;
+  try {
+    dexConfig = getDexConfig(chainId, false); // V4 not required
+  } catch (error) {
+    // If DEX config fails to load, fall back to legacy env var approach
+    console.warn('⚠️  Could not load DEX config, using legacy environment variables');
+    dexConfig = {
+      name: 'Unknown Network',
+      uniswapV3: {
+        quoterAddress: process.env.UNISWAP_V3_QUOTER_ADDRESS || '0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6',
+        routerAddress: process.env.UNISWAP_V3_ROUTER_ADDRESS || '0xE592427A0AEce92De3Edee1F18E0157C05861564',
+        feeTiers: [
+          { fee: 500, tickSpacing: 10 },
+          { fee: 3000, tickSpacing: 60 },
+          { fee: 10000, tickSpacing: 200 }
+        ],
+        defaultFeeTier: 3000
+      },
+      uniswapV4: {
+        quoterAddress: process.env.UNISWAP_V4_QUOTER_ADDRESS || '',
+        poolManagerAddress: process.env.UNISWAP_V4_POOL_MANAGER_ADDRESS || '',
+        universalRouterAddress: process.env.UNISWAP_V4_UNIVERSAL_ROUTER_ADDRESS || '',
+        feeTiers: [
+          { fee: 500, tickSpacing: 10 },
+          { fee: 3000, tickSpacing: 60 },
+          { fee: 10000, tickSpacing: 200 }
+        ],
+        defaultFeeTier: 3000,
+        defaultHooks: '0x0000000000000000000000000000000000000000'
+      },
+      oneinch: {
+        apiBaseUrl: process.env.ONEINCH_API_BASE_URL || `https://api.1inch.dev/swap/v5.2/${chainId}`,
+        timeout: 30000
+      },
+      cowswap: {
+        apiBaseUrl: process.env.COWSWAP_API_BASE_URL || (chainId === 1 ? 'https://api.cow.fi/mainnet' : 'https://api.cow.fi/goerli'),
+        timeout: 30000
+      }
+    };
+  }
   
-  // Uniswap V4 Quoter (optional - V4 may not be deployed yet)
-  const uniswapV4QuoterAddress = process.env.UNISWAP_V4_QUOTER_ADDRESS;
+  const uniswapV3QuoterAddress = dexConfig.uniswapV3.quoterAddress;
+  const uniswapV4QuoterAddress = dexConfig.uniswapV4.quoterAddress || undefined;
 
   // 1Inch API Configuration
   const oneinchApiKey = process.env.ONEINCH_API_KEY;
@@ -46,17 +83,8 @@ export function loadConfig(): AppConfig {
     );
   }
   
-  const oneinchApiBaseUrl = 
-    process.env.ONEINCH_API_BASE_URL || 
-    `https://api.1inch.dev/swap/v5.2/${chainId}`;
-
-  // CowSwap API Configuration
-  const cowswapApiBaseUrl = 
-    process.env.COWSWAP_API_BASE_URL || 
-    (chainId === 1 
-      ? 'https://api.cow.fi/mainnet' 
-      : `https://api.cow.fi/goerli`);
-  
+  const oneinchApiBaseUrl = dexConfig.oneinch.apiBaseUrl;
+  const cowswapApiBaseUrl = dexConfig.cowswap.apiBaseUrl;
   const cowswapAppData = process.env.COWSWAP_APP_DATA || 'trading-web3';
 
   // Operational settings
@@ -76,6 +104,7 @@ export function loadConfig(): AppConfig {
   return {
     rpcUrl,
     chainId,
+    dex: dexConfig,
     uniswap: {
       v3QuoterAddress: uniswapV3QuoterAddress,
       v4QuoterAddress: uniswapV4QuoterAddress,

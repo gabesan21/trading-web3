@@ -17,6 +17,9 @@ importers:
       '@uniswap/v3-sdk':
         specifier: ^3.26.0
         version: 3.26.0(hardhat@2.27.2(ts-node@10.9.2(@types/node@25.0.0)(typescript@5.9.3))(typescript@5.9.3))
+      '@uniswap/v4-sdk':
+        specifier: ^1.23.0
+        version: 1.23.0(hardhat@2.27.2(ts-node@10.9.2(@types/node@25.0.0)(typescript@5.9.3))(typescript@5.9.3))
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -726,6 +729,10 @@ packages:
     resolution: {integrity: sha512-JV0Qc46Px5alvg6YWd+UIaGH9lDuYG/Js7ngxPit1SPaIP30AlVer1UYB7BRYeUVVxE+byUyIeN5jeQ7LLDjIw==}
     engines: {node: '>=10'}
     deprecated: Please upgrade to 1.0.1
+
+  '@uniswap/v4-sdk@1.23.0':
+    resolution: {integrity: sha512-WpnkNacNTe/qL4kj3DVC2nHaivUeuzYsWIvon+olAWYZyy+Frsnzfon/ZlznDifMPoV+im+MqYFsNQke4Vz3LA==}
+    engines: {node: '>=14'}
 
   acorn-walk@8.3.4:
     resolution: {integrity: sha512-ueEepnujpqee2o5aIYnvHU6C0A42MNdsIDeqy5BydrkuC5R1ZuUFnm27EeFJGoEHJQgn3uleRvmTXaJgfXbt4g==}
@@ -3431,6 +3438,16 @@ snapshots:
       '@openzeppelin/contracts': 3.4.1-solc-0.7-2
       '@uniswap/v3-core': 1.0.0
       '@uniswap/v3-periphery': 1.4.4
+
+  '@uniswap/v4-sdk@1.23.0(hardhat@2.27.2(ts-node@10.9.2(@types/node@25.0.0)(typescript@5.9.3))(typescript@5.9.3))':
+    dependencies:
+      '@ethersproject/solidity': 5.8.0
+      '@uniswap/sdk-core': 7.10.0
+      '@uniswap/v3-sdk': 3.26.0(hardhat@2.27.2(ts-node@10.9.2(@types/node@25.0.0)(typescript@5.9.3))(typescript@5.9.3))
+      tiny-invariant: 1.3.3
+      tiny-warning: 1.0.3
+    transitivePeerDependencies:
+      - hardhat
 
   acorn-walk@8.3.4:
     dependencies:
