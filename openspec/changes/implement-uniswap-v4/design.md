@@ -1,8 +1,10 @@
-# Design: Uniswap V4 Integration
+# Design: Uniswap V4 Integration with Centralized DEX Configuration
 
 ## Context
 
 Uniswap V4 represents a significant architectural shift from V3, introducing a singleton PoolManager contract, flash accounting for gas optimization, and customizable hooks. The current codebase has placeholder implementations that need to be replaced with functional code based on the V4 SDK and contract interfaces.
+
+Additionally, the current DEX integrations have scattered configuration across multiple files (hardcoded fee tiers, contract addresses in env.ts, etc.). This creates maintenance challenges and inconsistencies.
 
 Key V4 differences from V3:
 - **Singleton architecture**: One PoolManager instead of separate pool contracts
@@ -16,9 +18,11 @@ Key V4 differences from V3:
 ### Goals
 - Implement functional V4 quote fetching using Quoter contract
 - Implement V4 swap execution using Universal Router
-- Maintain consistency with existing V3, 1Inch, and CowSwap integration patterns
-- Support configurable V4 contract addresses for different networks
-- Enable V4 in production scripts (check-rates, arbitrage)
+- **Create centralized DEX configuration system** for all DEX integrations
+- **Make V4 a required component** of the system (not optional)
+- Refactor existing DEX integrations (V3, 1Inch, CowSwap) to use centralized config
+- Support configurable contract addresses and parameters per network
+- Enable V4 in production scripts (check-rates, arbitrage) as a required provider
 
 ### Non-Goals
 - Custom hook development (use hookless pools initially)
@@ -49,16 +53,32 @@ Key V4 differences from V3:
 **Alternatives considered**:
 - Implement hook support from day 1: Unnecessary complexity for MVP
 
-### Decision: Single Fee Tier (3000 = 0.3%)
-**Why**: Matches V3 implementation pattern. Can be extended to multi-tier support later.
+### Decision: Support Multiple Fee Tiers via Centralized Config
+**Why**: Different pools use different fee tiers (500, 3000, 10000 bps). Centralized configuration allows trying multiple tiers to find best quotes.
 
 **Alternatives considered**:
-- Support all fee tiers: Adds complexity without immediate value
+- Hardcoded single fee tier: Misses better opportunities on other tiers
+- Per-quote fee tier selection: Too complex for initial implementation
 
-### Decision: Optional V4 Configuration
-**Why**: V4 is not yet widely deployed. Making it optional allows gradual rollout.
+**Implementation**: `config/dex.json` defines available fee tiers per DEX version
 
-**Implementation**: Check for `UNISWAP_V4_QUOTER_ADDRESS` in env. If not set, skip V4 provider initialization.
+### Decision: V4 is REQUIRED, Not Optional
+**Why**: V4 is a core component of the trading system. The system should fail fast if V4 is not properly configured, rather than silently degrading.
+
+**Alternatives considered**:
+- Optional V4: Creates inconsistent behavior; hard to debug when missing
+- Fallback to V3 only: Misses V4 gas savings and features
+
+**Implementation**: System throws configuration error at startup if V4 addresses are missing
+
+### Decision: Centralized DEX Configuration File
+**Why**: Currently, configuration is scattered (hardcoded fee tiers in V3, addresses in env.ts, etc.). Centralizing improves maintainability and enables network-specific overrides.
+
+**Alternatives considered**:
+- Keep scattered config: Hard to maintain, error-prone
+- All in env variables: Too many variables, hard to manage
+
+**Implementation**: `config/dex.json` with per-network settings, loaded at startup
 
 ## Architecture
 
@@ -103,6 +123,73 @@ const currency0 = isTokenAFirst ? tokenA.address : tokenB.address;
 const currency1 = isTokenAFirst ? tokenB.address : tokenA.address;
 const zeroForOne = isTokenAFirst; // true if swapping tokenA → tokenB
 ```
+
+### DEX Configuration System
+
+#### Configuration File Structure (`config/dex.json`)
+```json
+{
+  "networks": {
+    "137": {
+      "name": "Polygon",
+      "uniswapV3": {
+        "quoterAddress": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6",
+        "routerAddress": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000
+      },
+      "uniswapV4": {
+        "quoterAddress": "0x...",
+        "poolManagerAddress": "0x...",
+        "universalRouterAddress": "0x...",
+        "feeTiers": [
+          { "fee": 500, "tickSpacing": 10 },
+          { "fee": 3000, "tickSpacing": 60 },
+          { "fee": 10000, "tickSpacing": 200 }
+        ],
+        "defaultFeeTier": 3000,
+        "defaultHooks": "0x0000000000000000000000000000000000000000"
+      },
+      "oneinch": {
+        "apiBaseUrl": "https://api.1inch.dev/swap/v5.2/137",
+        "timeout": 30000
+      },
+      "cowswap": {
+        "apiBaseUrl": "https://api.cow.fi/mainnet",
+        "appData": "0x...",
+        "timeout": 30000
+      }
+    },
+    "80002": {
+      "name": "Polygon Amoy Testnet",
+      "uniswapV3": { "...": "testnet addresses" },
+      "uniswapV4": { "...": "testnet addresses" }
+    }
+  }
+}
+```
+
+#### Config Loader Flow
+```
+Application Startup
+  → Load config/dex.json
+  → Validate structure and required fields
+  → Get active network from CHAIN_ID env var
+  → Extract network-specific config
+  → Merge with .env overrides (for contract addresses)
+  → Throw error if V4 config missing for active network
+  → Provide typed config object to all DEX integrations
+```
+
+#### Migration Strategy for Existing DEXs
+1. **Uniswap V3**: Replace hardcoded `feeTier = 3000` with config lookup
+2. **1Inch**: Replace hardcoded API URL with config lookup
+3. **CowSwap**: Replace hardcoded API URL with config lookup
+4. **All**: Use centralized contract addresses instead of env-only
 
 ## Contract Addresses
 
